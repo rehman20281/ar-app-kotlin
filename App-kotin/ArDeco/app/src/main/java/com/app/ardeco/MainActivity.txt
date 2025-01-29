@@ -1,0 +1,168 @@
+package com.app.ardeco
+
+import android.annotation.SuppressLint
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.navigation.Navigator
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import com.app.ardeco.ui.theme.ARApplicationTheme
+import androidx.compose.runtime.compositionLocalOf
+import androidx.navigation.NavHostController
+
+val LocalNavController = compositionLocalOf<NavHostController> {
+    error("No NavController provided")
+}
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            ARApplicationTheme {
+                LoadScreen()
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StartApp() {
+    Scaffold(topBar = {
+        TopAppBar(
+            title = { Text("My App with AppBar and Grid") },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                titleContentColor = Color.White
+            )
+        )
+    }) { paddingValues ->
+        GridContent(Modifier.padding(paddingValues))
+    }
+}
+
+@Composable
+fun GridContent(modifier: Modifier = Modifier) {
+    // Sample data
+    val data = listOf(
+        mapOf(
+            "title" to "Table",
+            "model" to "sofa_and_table.glb",
+            "image" to "https://media.sketchfab.com/models/988bf24fd6a84501905e9d93df6136cb/thumbnails/9fc54e67478b478a8dc9b220ba620980/d60c01ae081d439d867a666614c529e3.jpeg"
+        ),
+        mapOf(
+            "title" to "Bed",
+            "model" to "bed.glb",
+            "image" to "https://media.sketchfab.com/models/cd0e10e55ebf486eaf9c0a7bcb2cf0ab/thumbnails/417252b94efd4462aa24bd0482d04b73/a20ceed661c047f78f98a793c3ac3f75.jpeg"
+        ),
+        mapOf(
+            "title" to "Bed",
+            "model" to "dining_table_glass.glb",
+            "image" to "https://media.sketchfab.com/models/c41a27d7a1b24dc484bc603e1bc2d0ef/thumbnails/8e68ee3fe5394e0e9172c016b589b08d/256x144.jpeg"
+        ),
+        mapOf(
+            "title" to "Dining",
+            "model" to "victorian_dressing_table.glb",
+            "image" to "https://media.sketchfab.com/models/0bef89aafd31423ab9c5b4dcf9c5aba9/thumbnails/dfee271285074f3fa23553b964089a31/7fef81072e65457abd47a73b4f9a664c.jpeg"
+        ),
+        mapOf(
+            "title" to "PBR Dressing table",
+            "model" to "victorian_dressing_table.glb",
+            "image" to "https://media.sketchfab.com/models/65a67ec61ce04300a31965288d440631/thumbnails/625bdb358f5140aea0a5b0151c85a24b/49c43819d1e04c6e9ee73843cf5628e8.jpeg"
+        ),
+    )
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(8.dp),
+        contentPadding = PaddingValues(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(data) { item ->
+            val title = item["title"] ?: "Unknown"
+            val model = item["model"] ?: "Unknown"
+            val image = item["image"] ?: "Unknown"
+            GridItem(title = title, model = model, image = image)
+        }
+
+    }
+}
+
+@Composable
+fun GridItem(title: String, model: String, image: String) {
+    val navController = LocalNavController.current
+
+    Card(
+        onClick = {
+            navController.navigate("arscreen/${model}")
+        },
+        modifier = Modifier,
+        //.border(0.5.dp, Color.LightGray),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier,
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AsyncImage(
+                model = image,
+                contentDescription = "",
+                placeholder = painterResource(androidx.core.R.drawable.ic_call_decline_low),
+                error = painterResource(androidx.core.R.drawable.ic_call_answer_video_low),
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier.size(width = 200.dp, height = 150.dp)
+            )
+        }
+    }
+}
+
+
+@Composable
+fun LoadScreen() {
+    val navController = rememberNavController()
+    CompositionLocalProvider(LocalNavController provides navController) {
+        NavHost(navController = navController, startDestination = "home") {
+            composable("home") {
+                StartApp()
+            }
+            composable("arscreen/{model}") { backStackEntry ->
+                ARScreen(modelPath = backStackEntry.arguments?.getString("model") ?: "")
+            }
+        }
+    }
+}
